@@ -19,30 +19,37 @@ jobs:
           - name: dev
             sdk-channel: dev
     name: "uFBT: ${{ matrix.name }}"
+    env:
+      UFBT_HOME: ${{ github.workspace }}/.ufbt/${{ matrix.sdk-channel }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Build sample app
-        id: build-sample
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          app-dir: apps/sample_tool
-          sdk-channel: ${{ matrix.sdk-channel }}
+          python-version: "3.x"
+
+      - name: Install uFBT
+        run: python -m pip install --upgrade ufbt
+
+      - name: Deploy uFBT SDK
+        working-directory: apps/sample_tool
+        run: ufbt update --channel "${{ matrix.sdk-channel }}"
+
+      - name: Build sample app
+        working-directory: apps/sample_tool
+        run: ufbt
 
       - name: Lint sample app
-        uses: flipperdevices/flipperzero-ufbt-action@v0.1
-        with:
-          app-dir: apps/sample_tool
-          sdk-channel: ${{ matrix.sdk-channel }}
-          skip-setup: true
-          task: lint
+        working-directory: apps/sample_tool
+        run: ufbt lint
 
       - name: Upload FAP artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: sample_tool-${{ matrix.name }}-${{ steps.build-sample.outputs.suffix }}
-          path: ${{ steps.build-sample.outputs.fap-artifacts }}
+          name: sample_tool-${{ matrix.name }}
+          path: apps/sample_tool/dist/*.fap
           if-no-files-found: error
 
   factory-scripts:
