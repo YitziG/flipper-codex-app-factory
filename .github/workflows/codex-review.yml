@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   codex-readiness:
     runs-on: ubuntu-latest
@@ -16,7 +19,7 @@ jobs:
     steps:
       - name: Checkout
         if: env.HAS_OPENAI_API_KEY == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -32,7 +35,7 @@ jobs:
 
       - name: Upload Codex review output
         if: env.HAS_OPENAI_API_KEY == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: codex-readiness-review
           path: codex-output.md

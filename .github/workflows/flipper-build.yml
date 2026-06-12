@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
     name: "uFBT: ${{ matrix.name }}"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build sample app
         id: build-sample
@@ -36,7 +39,7 @@ jobs:
           task: lint
 
       - name: Upload FAP artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sample_tool-${{ matrix.name }}-${{ steps.build-sample.outputs.suffix }}
           path: ${{ steps.build-sample.outputs.fap-artifacts }}
@@ -47,7 +50,7 @@ jobs:
     name: "Factory scripts"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Scaffold smoke app
         run: python3 scripts/new_app.py --appid smoke_tool --name "Smoke Tool" --category Tools --author CI --short-description "CI scaffold smoke test"
