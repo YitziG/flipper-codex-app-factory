@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.venv/
+.ufbt/
+apps/*/.clang-format
+apps/*/.vscode/
+dist/
+build/
+*.pyc
+__pycache__/

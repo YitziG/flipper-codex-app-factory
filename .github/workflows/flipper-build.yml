@@ -1,0 +1,62 @@
+name: "FAP: Build and lint"
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: release
+            sdk-channel: release
+          - name: dev
+            sdk-channel: dev
+    name: "uFBT: ${{ matrix.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build sample app
+        id: build-sample
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          app-dir: apps/sample_tool
+          sdk-channel: ${{ matrix.sdk-channel }}
+
+      - name: Lint sample app
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          app-dir: apps/sample_tool
+          sdk-channel: ${{ matrix.sdk-channel }}
+          skip-setup: true
+          task: lint
+
+      - name: Upload FAP artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample_tool-${{ matrix.name }}-${{ steps.build-sample.outputs.suffix }}
+          path: ${{ steps.build-sample.outputs.fap-artifacts }}
+          if-no-files-found: error
+
+  factory-scripts:
+    runs-on: ubuntu-latest
+    name: "Factory scripts"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scaffold smoke app
+        run: python3 scripts/new_app.py --appid smoke_tool --name "Smoke Tool" --category Tools --author CI --short-description "CI scaffold smoke test"
+
+      - name: Validate sample metadata
+        run: python3 scripts/validate_app.py apps/sample_tool --skip-ufbt
+
+      - name: Validate smoke metadata
+        run: python3 scripts/validate_app.py apps/smoke_tool --skip-ufbt
+
+      - name: Generate catalog manifest
+        run: python3 scripts/catalog_manifest.py apps/sample_tool --origin https://github.com/example/flipper-codex-app-factory.git --commit-sha 0123456789abcdef0123456789abcdef01234567

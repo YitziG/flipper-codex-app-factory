@@ -1,0 +1,39 @@
+name: "Codex readiness review"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  codex-readiness:
+    runs-on: ubuntu-latest
+    env:
+      HAS_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+    steps:
+      - name: Checkout
+        if: env.HAS_OPENAI_API_KEY == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Codex release readiness review
+        if: env.HAS_OPENAI_API_KEY == 'true'
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/review.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          output-file: codex-output.md
+
+      - name: Upload Codex review output
+        if: env.HAS_OPENAI_API_KEY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-readiness-review
+          path: codex-output.md
+          if-no-files-found: error

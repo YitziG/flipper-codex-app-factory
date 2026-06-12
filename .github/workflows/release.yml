@@ -1,0 +1,46 @@
+name: "FAP: Release"
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: release
+            sdk-channel: release
+          - name: dev
+            sdk-channel: dev
+    name: "Release FAP: ${{ matrix.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build sample app
+        id: build-sample
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1
+        with:
+          app-dir: apps/sample_tool
+          sdk-channel: ${{ matrix.sdk-channel }}
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample_tool-${{ matrix.name }}-${{ steps.build-sample.outputs.suffix }}
+          path: ${{ steps.build-sample.outputs.fap-artifacts }}
+          if-no-files-found: error
+
+      - name: Attach FAP to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build-sample.outputs.fap-artifacts }}
