@@ -34,22 +34,31 @@ jobs:
         run: python -m pip install --upgrade ufbt
 
       - name: Deploy uFBT SDK
-        working-directory: apps/sample_tool
         run: ufbt update --channel "${{ matrix.sdk-channel }}"
 
-      - name: Build sample app
-        working-directory: apps/sample_tool
-        run: ufbt
+      - name: Build apps
+        run: |
+          for manifest in apps/*/application.fam; do
+            app_dir="$(dirname "$manifest")"
+            echo "::group::Build ${app_dir}"
+            (cd "$app_dir" && ufbt)
+            echo "::endgroup::"
+          done
 
-      - name: Lint sample app
-        working-directory: apps/sample_tool
-        run: ufbt lint
+      - name: Lint apps
+        run: |
+          for manifest in apps/*/application.fam; do
+            app_dir="$(dirname "$manifest")"
+            echo "::group::Lint ${app_dir}"
+            (cd "$app_dir" && ufbt lint)
+            echo "::endgroup::"
+          done
 
       - name: Upload FAP artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: sample_tool-${{ matrix.name }}
-          path: apps/sample_tool/dist/*.fap
+          name: faps-${{ matrix.name }}
+          path: apps/*/dist/*.fap
           if-no-files-found: error
 
   factory-scripts:

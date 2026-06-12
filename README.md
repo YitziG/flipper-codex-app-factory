@@ -16,6 +16,8 @@ make lint APP=apps/sample_tool
 make build APP=apps/sample_tool
 ```
 
+CI builds and lints every committed app under `apps/*/application.fam` for both the `release` and `dev` SDK channels. Tag releases attach release-channel `.fap` files for every committed app.
+
 Launch to a locally connected Flipper only after reviewing the generated device-facing code:
 
 ```bash
